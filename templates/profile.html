@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}User Profile - Financial Investment Recommendation System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-user-circle me-2"></i>
+                Your Investment Profile
+            </h2>
+            <p class="lead">Configure your investment preferences to get personalized recommendations.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Account Information</h3>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                {{ user.username[0:2].upper() }}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h4 class="h6 mb-1">{{ user.username }}</h4>
+                            <p class="text-muted small mb-0">{{ user.email }}</p>
+                            <p class="text-muted small mb-0">Joined: {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small text-muted mb-3">
+                        <p class="mb-1">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your investment profile helps us provide personalized recommendations that align with your financial goals and risk tolerance.
+                        </p>
+                        <p class="mb-1">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            We keep your information secure and never share it with third parties.
+                        </p>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-tachometer-alt me-1"></i> Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-4">Investment Preferences</h3>
+                    
+                    <form method="POST">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Risk Tolerance</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="risk_tolerance" id="risk_low" value="low" {% if preferences and preferences.risk_tolerance == 'low' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="risk_low">
+                                            <strong>Conservative</strong> - Lower risk, stable returns
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="risk_tolerance" id="risk_medium" value="medium" {% if preferences and preferences.risk_tolerance == 'medium' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="risk_medium">
+                                            <strong>Moderate</strong> - Balanced risk and return
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="risk_tolerance" id="risk_high" value="high" {% if preferences and preferences.risk_tolerance == 'high' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="risk_high">
+                                            <strong>Aggressive</strong> - Higher risk, potential for higher returns
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Investment Horizon</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="investment_horizon" id="horizon_short" value="short" {% if preferences and preferences.investment_horizon == 'short' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="horizon_short">
+                                            <strong>Short-term</strong> - Less than 1 year
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="investment_horizon" id="horizon_medium" value="medium" {% if preferences and preferences.investment_horizon == 'medium' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="horizon_medium">
+                                            <strong>Medium-term</strong> - 1-5 years
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="investment_horizon" id="horizon_long" value="long" {% if preferences and preferences.investment_horizon == 'long' %}checked{% endif %} required>
+                                        <label class="form-check-label" for="horizon_long">
+                                            <strong>Long-term</strong> - 5+ years
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="initial_investment" class="form-label">Initial Investment Amount ($)</label>
+                                <input type="number" class="form-control" id="initial_investment" name="initial_investment" placeholder="Enter amount" value="{{ preferences.initial_investment if preferences else '5000' }}" min="0" step="100" required>
+                                <div class="form-text">Approximate amount you plan to invest initially.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Preferred Sectors</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for sector in sectors %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="preferred_sectors" id="sector_{{ loop.index }}" value="{{ sector }}" {% if preferences and sector in preferences.preferred_sectors %}checked{% endif %}>
+                                        <label class="form-check-label" for="sector_{{ loop.index }}">
+                                            {{ sector }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Preferred Markets</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for market in markets %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="preferred_markets" id="market_{{ loop.index }}" value="{{ market }}" {% if preferences and market in preferences.preferred_markets %}checked{% endif %}>
+                                        <label class="form-check-label" for="market_{{ loop.index }}">
+                                            {{ market }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo me-1"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Preferences
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

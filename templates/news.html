@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+
+{% block title %}Financial News - Financial Investment Recommendation System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-newspaper me-2"></i>
+                Financial News
+            </h2>
+            <p class="lead">Stay updated with the latest market news and sentiment analysis.</p>
+        </div>
+    </div>
+    
+    <!-- News Filter -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="sentimentFilter">
+                                <option value="all" selected>All Sentiment</option>
+                                <option value="positive">Positive</option>
+                                <option value="neutral">Neutral</option>
+                                <option value="negative">Negative</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="sourceFilter">
+                                <option value="all" selected>All Sources</option>
+                                {% set sources = news_items|map(attribute='source')|list|unique %}
+                                {% for source in sources %}
+                                <option value="{{ source }}">{{ source }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Search news...">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100" id="resetFilters">
+                                <i class="fas fa-sync-alt me-1"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- News Articles -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    {% if news_items %}
+                        <div class="row g-4" id="newsContainer">
+                            {% for news in news_items %}
+                            <div class="col-lg-6 news-item" 
+                                 data-sentiment="{% if news.sentiment_score > 0.2 %}positive{% elif news.sentiment_score < -0.2 %}negative{% else %}neutral{% endif %}"
+                                 data-source="{{ news.source }}">
+                                <div class="card border-0 h-100 bg-light bg-opacity-10">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="badge bg-secondary">{{ news.source }}</span>
+                                            <span class="text-muted small">{{ news.published_at.strftime('%b %d, %Y') }}</span>
+                                        </div>
+                                        
+                                        <h4 class="h5 mb-3">{{ news.title }}</h4>
+                                        
+                                        <p class="mb-3">
+                                            {{ news.summary }}
+                                        </p>
+                                        
+                                        {% if news.related_symbols and news.related_symbols|length > 0 %}
+                                        <div class="mb-3">
+                                            <span class="text-muted small me-2">Related:</span>
+                                            {% for symbol in news.related_symbols %}
+                                            <a href="{{ url_for('stock_details', symbol=symbol) }}" class="badge bg-primary bg-opacity-10 text-primary me-1">
+                                                {{ symbol }}
+                                            </a>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            {% if news.sentiment_score is not none %}
+                                            <div>
+                                                <span class="badge {% if news.sentiment_score > 0.2 %}bg-success{% elif news.sentiment_score < -0.2 %}bg-danger{% else %}bg-secondary{% endif %} me-1">
+                                                    {% if news.sentiment_score > 0.2 %}
+                                                    <i class="fas fa-arrow-up me-1"></i> Positive
+                                                    {% elif news.sentiment_score < -0.2 %}
+                                                    <i class="fas fa-arrow-down me-1"></i> Negative
+                                                    {% else %}
+                                                    <i class="fas fa-minus me-1"></i> Neutral
+                                                    {% endif %}
+                                                </span>
+                                                <span class="small text-muted">Score: {{ "%.2f"|format(news.sentiment_score) }}</span>
+                                            </div>
+                                            {% endif %}
+                                            <a href="{{ news.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-external-link-alt me-1"></i> Read Full Article
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-newspaper fa-3x text-muted"></i>
+                            </div>
+                            <h4 class="h6">No News Available</h4>
+                            <p class="text-muted">Check back later for the latest market news.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // News filtering functionality
+    const sentimentFilter = document.getElementById('sentimentFilter');
+    const sourceFilter = document.getElementById('sourceFilter');
+    const searchFilter = document.getElementById('searchFilter');
+    const resetButton = document.getElementById('resetFilters');
+    const newsItems = document.querySelectorAll('.news-item');
+    
+    // Function to apply filters
+    function applyFilters() {
+        const sentiment = sentimentFilter.value;
+        const source = sourceFilter.value;
+        const search = searchFilter.value.toLowerCase();
+        
+        newsItems.forEach(item => {
+            const itemSentiment = item.getAttribute('data-sentiment');
+            const itemSource = item.getAttribute('data-source');
+            const itemText = item.textContent.toLowerCase();
+            
+            const matchesSentiment = sentiment === 'all' || itemSentiment === sentiment;
+            const matchesSource = source === 'all' || itemSource === source;
+            const matchesSearch = search === '' || itemText.includes(search);
+            
+            if (matchesSentiment && matchesSource && matchesSearch) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Check if any visible items
+        checkNoResults();
+    }
+    
+    // Function to check if no results are visible
+    function checkNoResults() {
+        const visibleItems = document.querySelectorAll('.news-item[style=""]');
+        const newsContainer = document.getElementById('newsContainer');
+        
+        if (visibleItems.length === 0 && newsContainer) {
+            // If no newsContainer exists or already has a no-results message, skip
+            if (!document.getElementById('noResultsMessage')) {
+                const noResultsMessage = document.createElement('div');
+                noResultsMessage.id = 'noResultsMessage';
+                noResultsMessage.classList.add('col-12', 'text-center', 'py-5');
+                noResultsMessage.innerHTML = `
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-3x text-muted"></i>
+                    </div>
+                    <h4 class="h6">No News Found</h4>
+                    <p class="text-muted">Try different filter settings or reset filters.</p>
+                `;
+                newsContainer.appendChild(noResultsMessage);
+            }
+        } else {
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (noResultsMessage) {
+                noResultsMessage.remove();
+            }
+        }
+    }
+    
+    // Event listeners for filters
+    if (sentimentFilter) {
+        sentimentFilter.addEventListener('change', applyFilters);
+    }
+    
+    if (sourceFilter) {
+        sourceFilter.addEventListener('change', applyFilters);
+    }
+    
+    if (searchFilter) {
+        searchFilter.addEventListener('input', applyFilters);
+    }
+    
+    // Reset filters
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            if (sentimentFilter) sentimentFilter.value = 'all';
+            if (sourceFilter) sourceFilter.value = 'all';
+            if (searchFilter) searchFilter.value = '';
+            applyFilters();
+        });
+    }
+});
+</script>
+{% endblock %}

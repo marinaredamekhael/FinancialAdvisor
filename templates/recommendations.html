@@ -1,0 +1,293 @@
+{% extends "layout.html" %}
+
+{% block title %}Recommendations - Financial Investment Recommendation System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-thumbs-up me-2"></i>
+                Investment Recommendations
+            </h2>
+            <p class="lead">Personalized stock recommendations based on your investment profile and market analysis.</p>
+        </div>
+    </div>
+    
+    <!-- Recommendation Controls -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-lightbulb me-1 text-warning"></i>
+                                Recommendations are based on your risk profile, investment horizon, and preferred sectors.
+                            </p>
+                        </div>
+                        <div class="mt-3 mt-md-0">
+                            <form method="GET" action="{{ url_for('recommendations') }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-1"></i> Refresh Recommendations
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <ul class="nav nav-tabs card-header-tabs" id="recommendationsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-pane" type="button" role="tab">
+                                All Recommendations
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="top-tab" data-bs-toggle="tab" data-bs-target="#top-pane" type="button" role="tab">
+                                Top Picks
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="recommendationsTabContent">
+                        <!-- All Recommendations Tab -->
+                        <div class="tab-pane fade show active" id="all-pane" role="tabpanel" aria-labelledby="all-tab">
+                            {% if recommendations %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle" id="recommendationsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Name</th>
+                                                <th>Sector</th>
+                                                <th>Price</th>
+                                                <th>Score</th>
+                                                <th>Reason</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for rec in recommendations %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold">{{ rec.symbol }}</div>
+                                                </td>
+                                                <td>{{ rec.name }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ rec.sector }}</span>
+                                                </td>
+                                                <td>${{ "%.2f"|format(rec.price) }}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ rec.score * 100 }}%;" aria-valuenow="{{ rec.score * 100 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                        <span class="ms-2 small">{{ "%.2f"|format(rec.score) }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted small">{{ rec.reason }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ url_for('stock_details', symbol=rec.symbol) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-chart-line me-1"></i> Details
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#addToPortfolioModal" 
+                                                                data-symbol="{{ rec.symbol }}" 
+                                                                data-name="{{ rec.name }}"
+                                                                data-price="{{ rec.price }}">
+                                                            <i class="fas fa-plus me-1"></i> Add
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-lightbulb fa-3x text-muted"></i>
+                                    </div>
+                                    <h4 class="h6">No Recommendations Available</h4>
+                                    <p class="text-muted mb-4">We couldn't generate recommendations based on your profile.</p>
+                                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-user-cog me-1"></i> Update Your Profile
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Top Picks Tab -->
+                        <div class="tab-pane fade" id="top-pane" role="tabpanel" aria-labelledby="top-tab">
+                            {% if recommendations %}
+                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                    {% for rec in recommendations[:6] %}
+                                    <div class="col">
+                                        <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <h5 class="mb-0">{{ rec.symbol }}</h5>
+                                                    <span class="badge bg-primary">Score: {{ "%.2f"|format(rec.score) }}</span>
+                                                </div>
+                                                
+                                                <p class="text-muted mb-3">{{ rec.name }}</p>
+                                                
+                                                <div class="mb-3">
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span>Current Price:</span>
+                                                        <span class="fw-bold">${{ "%.2f"|format(rec.price) }}</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>Sector:</span>
+                                                        <span>{{ rec.sector }}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="border-top pt-3 mb-3">
+                                                    <h6 class="mb-2">Why We Recommend</h6>
+                                                    <p class="small text-muted">{{ rec.reason }}</p>
+                                                </div>
+                                                
+                                                <div class="d-grid gap-2">
+                                                    <a href="{{ url_for('stock_details', symbol=rec.symbol) }}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-chart-line me-1"></i> View Details
+                                                    </a>
+                                                    <button type="button" class="btn btn-success btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#addToPortfolioModal" 
+                                                            data-symbol="{{ rec.symbol }}" 
+                                                            data-name="{{ rec.name }}"
+                                                            data-price="{{ rec.price }}">
+                                                        <i class="fas fa-plus me-1"></i> Add to Portfolio
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-lightbulb fa-3x text-muted"></i>
+                                    </div>
+                                    <h4 class="h6">No Top Picks Available</h4>
+                                    <p class="text-muted">We couldn't generate top recommendations for you at this time.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Portfolio Modal -->
+<div class="modal fade" id="addToPortfolioModal" tabindex="-1" aria-labelledby="addToPortfolioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addToPortfolioModalLabel">Add Recommended Stock to Portfolio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_to_portfolio') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Stock</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                            <input type="text" class="form-control" id="stock_display" readonly>
+                            <input type="hidden" id="symbol" name="symbol" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01" value="1" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="purchase_price" class="form-label">Purchase Price per Share ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-dollar-sign"></i>
+                            </span>
+                            <input type="number" class="form-control" id="purchase_price" name="purchase_price" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Add to Portfolio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add to portfolio modal
+    const addToPortfolioModal = document.getElementById('addToPortfolioModal');
+    if (addToPortfolioModal) {
+        addToPortfolioModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const symbol = button.getAttribute('data-symbol');
+            const name = button.getAttribute('data-name');
+            const price = button.getAttribute('data-price');
+            
+            const stockDisplay = document.getElementById('stock_display');
+            const symbolInput = document.getElementById('symbol');
+            const priceInput = document.getElementById('purchase_price');
+            
+            if (stockDisplay && symbolInput && priceInput) {
+                stockDisplay.value = `${symbol} - ${name}`;
+                symbolInput.value = symbol;
+                
+                if (price) {
+                    priceInput.value = price;
+                } else {
+                    // Fetch current price
+                    fetch(`/api/stock-price/${symbol}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.price) {
+                                priceInput.value = data.price.toFixed(2);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching stock price:', error);
+                            // Set a default value if API call fails
+                            priceInput.value = "0.00";
+                        });
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

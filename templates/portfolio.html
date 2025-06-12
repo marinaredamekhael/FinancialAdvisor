@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}Portfolio - Financial Investment Recommendation System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-chart-pie me-2"></i>
+                My Portfolio
+            </h2>
+        </div>
+    </div>
+    
+    <!-- Portfolio Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 class="text-muted mb-2">Total Value</h6>
+                            <h3 class="mb-0">${{ "%.2f"|format(total_value) }}</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted mb-2">Total Investment</h6>
+                            <h3 class="mb-0">${{ "%.2f"|format(total_investment) }}</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted mb-2">Total Profit/Loss</h6>
+                            <h3 class="mb-0 {% if total_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(total_profit_loss) }}
+                                ({{ "%.2f"|format(total_profit_loss_percent) }}%)
+                            </h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted mb-2">Number of Investments</h6>
+                            <h3 class="mb-0">{{ portfolio_items|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Portfolio Items -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Investment Holdings</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Details</th>
+                                    <th>Quantity</th>
+                                    <th>Purchase Price</th>
+                                    <th>Current Value</th>
+                                    <th>Profit/Loss</th>
+                                    <th>Purchase Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in portfolio_items %}
+                                <tr>
+                                    <td>
+                                        {% if item.type == 'stock' %}
+                                            <span class="badge bg-primary">Stock</span>
+                                        {% elif item.type == 'real_estate' %}
+                                            <span class="badge bg-success">Real Estate</span>
+                                        {% elif item.type == 'cryptocurrency' %}
+                                            <span class="badge bg-warning">Crypto</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.type == 'stock' or item.type == 'cryptocurrency' %}
+                                            {{ item.symbol }} - {{ item.name }}
+                                        {% else %}
+                                            {{ item.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.type == 'stock' %}
+                                            {{ item.sector }}
+                                        {% elif item.type == 'real_estate' %}
+                                            {{ item.location }} ({{ item.property_type }})
+                                        {% elif item.type == 'cryptocurrency' %}
+                                            Cryptocurrency
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ "%.4f"|format(item.quantity) }}</td>
+                                    <td>${{ "%.2f"|format(item.purchase_price) }}</td>
+                                    <td>${{ "%.2f"|format(item.current_value) }}</td>
+                                    <td class="{% if item.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.2f"|format(item.profit_loss) }}
+                                        ({{ "%.2f"|format(item.profit_loss_percent) }}%)
+                                    </td>
+                                    <td>{{ item.purchase_date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sector Allocation -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Sector Allocation</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sector</th>
+                                    <th>Value</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sector in sector_data %}
+                                <tr>
+                                    <td>{{ sector.sector }}</td>
+                                    <td>${{ "%.2f"|format(sector.value) }}</td>
+                                    <td>{{ "%.2f"|format(sector.percentage) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

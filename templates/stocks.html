@@ -1,0 +1,356 @@
+{% extends "layout.html" %}
+
+{% block title %}Stock Search - Financial Investment Recommendation System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="fas fa-search-dollar me-2"></i>
+                Stock Search
+            </h2>
+            <p class="lead">Search for stocks to view details or add to your portfolio.</p>
+        </div>
+    </div>
+    
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('stocks') }}" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="search_query" name="search_query" 
+                                       placeholder="Search by company name or symbol (e.g., AAPL, Google)" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i> Search Stocks
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Results -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h3 class="h5 mb-0">Search Results</h3>
+                </div>
+                <div class="card-body">
+                    {% if search_results %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Region</th>
+                                        <th>Currency</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in search_results %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ stock.symbol }}</div>
+                                        </td>
+                                        <td>{{ stock.name }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ stock.type }}</span>
+                                        </td>
+                                        <td>{{ stock.region }}</td>
+                                        <td>{{ stock.currency }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('stock_details', symbol=stock.symbol) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-chart-line me-1"></i> Details
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-success" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#addToPortfolioModal" 
+                                                        data-symbol="{{ stock.symbol }}" 
+                                                        data-name="{{ stock.name }}">
+                                                    <i class="fas fa-plus me-1"></i> Add to Portfolio
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% elif request.method == 'POST' %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-3x text-muted"></i>
+                            </div>
+                            <h4 class="h6">No Results Found</h4>
+                            <p class="text-muted">Try a different search term or symbol.</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-3x text-muted"></i>
+                            </div>
+                            <h4 class="h6">Search for Stocks</h4>
+                            <p class="text-muted">Use the search box above to find stocks.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popular Stocks Section -->
+    {% if not search_results %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h3 class="h5 mb-0">Popular Stocks</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        <!-- Apple -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fab fa-apple fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Apple Inc.</h4>
+                                            <div class="text-muted small">AAPL</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='AAPL') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Microsoft -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fab fa-microsoft fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Microsoft Corp.</h4>
+                                            <div class="text-muted small">MSFT</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='MSFT') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Amazon -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fab fa-amazon fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Amazon.com Inc.</h4>
+                                            <div class="text-muted small">AMZN</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='AMZN') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Google -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fab fa-google fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Alphabet Inc.</h4>
+                                            <div class="text-muted small">GOOGL</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='GOOGL') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tesla -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fas fa-car fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Tesla Inc.</h4>
+                                            <div class="text-muted small">TSLA</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='TSLA') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Facebook/Meta -->
+                        <div class="col">
+                            <div class="card h-100 border-0 bg-light bg-opacity-10">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="stock-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                            <i class="fab fa-facebook fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="h6 mb-0">Meta Platforms Inc.</h4>
+                                            <div class="text-muted small">META</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('stock_details', symbol='META') }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line me-1"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add to Portfolio Modal -->
+<div class="modal fade" id="addToPortfolioModal" tabindex="-1" aria-labelledby="addToPortfolioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addToPortfolioModalLabel">Add to Portfolio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_to_portfolio') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Stock</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                            <input type="text" class="form-control" id="stock_display" readonly>
+                            <input type="hidden" id="symbol" name="symbol" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01" value="1" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="purchase_price" class="form-label">Purchase Price per Share ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-dollar-sign"></i>
+                            </span>
+                            <input type="number" class="form-control" id="purchase_price" name="purchase_price" min="0.01" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Add to Portfolio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle add to portfolio modal
+        const addToPortfolioModal = document.getElementById('addToPortfolioModal');
+        if (addToPortfolioModal) {
+            addToPortfolioModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const symbol = button.getAttribute('data-symbol');
+                const name = button.getAttribute('data-name');
+                
+                const stockDisplay = document.getElementById('stock_display');
+                const symbolInput = document.getElementById('symbol');
+                const priceInput = document.getElementById('purchase_price');
+                
+                if (stockDisplay && symbolInput) {
+                    stockDisplay.value = `${symbol} - ${name}`;
+                    symbolInput.value = symbol;
+                    
+                    // Fetch current price
+                    fetch(`/api/stock-price/${symbol}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (priceInput && data.price) {
+                                priceInput.value = data.price.toFixed(2);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching stock price:', error);
+                            // Set a default value if API call fails
+                            if (priceInput) {
+                                priceInput.value = "0.00";
+                            }
+                        });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
